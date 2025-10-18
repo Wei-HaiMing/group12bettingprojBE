@@ -61,7 +61,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // Redirect to React Native Expo app using deep link
         // Format: exp://localhost:8081/--/auth/callback?token=...
         // For physical device, use: myapp://auth/callback?token=...
-        String frontendUrl = "exp://10.11.48.42:8081/--/(tabs)/FavoriteTeams?token=" + jwtToken;
+        String frontendUrl = "exp://10.11.48.42:8081/--/(tabs)/index?token=" + jwtToken;
         // System.out.println("Redirecting to: " + frontendUrl);
         response.sendRedirect(frontendUrl);
     }
