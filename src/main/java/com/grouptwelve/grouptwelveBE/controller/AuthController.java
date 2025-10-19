@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.view.RedirectView;
 
 import com.grouptwelve.grouptwelveBE.model.User;
 import com.grouptwelve.grouptwelveBE.repository.UserRepository;
@@ -25,11 +26,11 @@ import com.grouptwelve.grouptwelveBE.repository.FavoriteTeamRepository;
 public class AuthController {
 
     /**
-     * OAuth start endpoint that accepts IP address parameter
+     * OAuth start endpoint that accepts IP address parameter and redirects to GitHub OAuth
      * Usage: /auth/start?redirect_ip=192.168.1.5
      */
     @GetMapping("/start")
-    public String authStart(
+    public RedirectView authStart(
             @RequestParam(value = "redirect_ip", required = false) String redirect_ip,
             HttpServletRequest request) {
         
@@ -40,7 +41,8 @@ public class AuthController {
             System.out.println("Stored redirect_ip in session: " + redirect_ip);
         }
 
-        return "{\"url\": \"https://bettingprojheroku-0f16500feb98.herokuapp.com/oauth2/authorization/github\"}";
+        // Redirect directly to GitHub OAuth
+        return new RedirectView("/oauth2/authorization/github");
     }
 
     // @GetMapping("/callback")
