@@ -4,6 +4,7 @@ import com.grouptwelve.grouptwelveBE.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -58,11 +59,25 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // Generate JWT token (convert githubId to String)
         String jwtToken = jwtUtil.createToken(String.valueOf(githubId), email, finalName);
         
-        // Redirect to React Native Expo app using deep link
-        // Format: exp://localhost:8081/--/auth/callback?token=...
-        // For physical device, use: myapp://auth/callback?token=...
-        String frontendUrl = "exp://10.0.0.114:8081/--/(tabs)/logout?token=" + jwtToken;
-        // System.out.println("Redirecting to: " + frontendUrl);
+        // Get the redirect IP from session (set during OAuth initiation)
+        HttpSession session = request.getSession(false);
+        String redirectIp = null;
+        if (session != null) {
+            redirectIp = (String) session.getAttribute("redirect_ip");
+            // Clear the attribute after use
+            session.removeAttribute("redirect_ip");
+        }
+        
+        String frontendUrl;
+        if (redirectIp != null && !redirectIp.isEmpty()) {
+            // Development mode: use exp:// with provided IP
+            frontendUrl = "exp://" + redirectIp + ":8081/--/(tabs)/logout?token=" + jwtToken;
+        } else {
+            // Production mode: use custom scheme
+            frontendUrl = "myapp://auth/callback?token=" + jwtToken;
+        }
+        
+        System.out.println("Redirecting to: " + frontendUrl);
         response.sendRedirect(frontendUrl);
     }
 }
