@@ -68,14 +68,14 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             session.removeAttribute("redirect_ip");
         }
         
-        String frontendUrl = "myapp://logout?token=" + jwtToken;
-        // if (redirectIp != null && !redirectIp.isEmpty()) {
-        //     // Development mode: use exp:// with provided IP
-        //     frontendUrl = "exp://" + redirectIp + ":8081/--/(tabs)/logout?token=" + jwtToken;
-        // } else {
-        //     // Production mode: use custom scheme
-        //     frontendUrl = "myapp://auth/callback?token=" + jwtToken;
-        // }
+        String frontendUrl;
+        if (redirectIp != null && !redirectIp.isEmpty()) {
+            // Development mode: use exp:// with provided IP
+            frontendUrl = "exp://" + redirectIp + ":8081/--/(tabs)/logout?token=" + jwtToken;
+        } else {
+            // Production mode: use custom scheme
+            frontendUrl = "myapp://auth/callback?token=" + jwtToken;
+        }
         
         System.out.println("Redirecting to: " + frontendUrl);
         response.sendRedirect(frontendUrl);
