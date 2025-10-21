@@ -19,7 +19,6 @@ public class CorsConfig {
         // For development: allow all origins
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         
-        // Alternatively, for production, specify exact origins:
         // configuration.setAllowedOrigins(Arrays.asList(
         //     "https://your-production-domain.com",
         //     "http://localhost:3000",

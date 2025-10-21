@@ -6,10 +6,14 @@ import jakarta.persistence.*;
 @Table(name = "users")
 public class User {
     @Id
+    @Column(unique = true, nullable = false)
     private Long userId;
 
     private String name;
+    
+    @Column(unique = true)
     private String email;
+    
     private String password;
 
     public User(){
