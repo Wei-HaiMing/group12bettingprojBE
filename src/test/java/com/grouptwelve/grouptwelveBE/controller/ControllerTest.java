@@ -7,10 +7,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -18,8 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grouptwelve.grouptwelveBE.model.FavoriteTeam;
-import com.grouptwelve.grouptwelveBE.repository.FavoriteTeamRepository;
+import com.grouptwelve.grouptwelveBE.model.Game;
 import com.grouptwelve.grouptwelveBE.model.User;
+import com.grouptwelve.grouptwelveBE.repository.FavoriteTeamRepository;
+import com.grouptwelve.grouptwelveBE.repository.GameRepository;
 import com.grouptwelve.grouptwelveBE.repository.UserRepository;
 
 
@@ -39,7 +41,12 @@ class ControllerTest {
     private FavoriteTeamRepository favoriteTeamRepository;
 
     @Autowired
+    private GameRepository gameRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
+
+
 
     @Test
     void testGetAllUsers() throws Exception {
@@ -79,7 +86,138 @@ class ControllerTest {
 
 
 
-    // Tests for Games 
+        // Tests for Games 
+        // Backend routes (Games) - helper method to create a new game object
+        private Game newGame(String home, String away) {
+        Game g = new Game();
+        g.setLeague("NFL");
+        g.setHomeTeam(home);
+        g.setAwayTeam(away);
+        g.setStatus("scheduled");
+        g.setStartTime(java.time.LocalDateTime.parse("2025-11-10T13:00:00"));
+        g.setOddsHome(new java.math.BigDecimal("1.80"));
+        g.setOddsAway(new java.math.BigDecimal("2.10"));
+        return g;
+    }
+
+        @Test
+    void testCreateGame() throws Exception {
+        Game body = newGame("Kansas City Privates", "New England Partisans");
+
+        mockMvc.perform(post("/api/games")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.league").value("NFL"))
+            .andExpect(jsonPath("$.homeTeam").value("Kansas City Privates"))
+            .andExpect(jsonPath("$.awayTeam").value("New England Partisans"))
+            .andExpect(jsonPath("$.status").value("scheduled"))
+            .andExpect(jsonPath("$.id").exists());
+    }
+
+    @Test
+    void testListGamesAndFilterByStatus() throws Exception {
+        // seed
+        Game g1 = gameRepository.save(newGame("Buffalo Beels", "Miami Dullfins"));            // scheduled
+        Game g2 = newGame("Chicago Beers", "Green Bay Smackers"); g2.setStatus("completed");
+        gameRepository.save(g2);
+
+        // list all
+        mockMvc.perform(get("/api/games"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(2));
+
+        // filter by status=completed
+        mockMvc.perform(get("/api/games").param("status", "completed"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$[0].status").value("completed"));
+    }
+
+    @Test
+    void testGetGameById() throws Exception {
+        Game saved = gameRepository.save(newGame("San Francisco Forty-Viners", "Los Angeles Rammers"));
+
+        mockMvc.perform(get("/api/games/" + saved.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.homeTeam").value("San Francisco Forty-Viners"))
+            .andExpect(jsonPath("$.awayTeam").value("Los Angeles Rammers"));
+    }
+
+    @Test
+    void testUpdateGameCoreFields() throws Exception {
+        Game saved = gameRepository.save(newGame("Dallas Cowpokes", "New York Dines"));
+
+        Game update = new Game();
+        update.setStatus("in_progress");
+        update.setOddsHome(new java.math.BigDecimal("1.75"));
+
+        mockMvc.perform(put("/api/games/{id}", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(update)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("in_progress"))
+            .andExpect(jsonPath("$.oddsHome").value(1.75));
+    }
+
+    @Test
+    void testUpdateOddsOnly() throws Exception {
+        Game saved = gameRepository.save(newGame("Quahog Griffins", "Springfield Isotopes"));
+
+        Game update = new Game();
+        update.setOddsHome(new java.math.BigDecimal("1.70"));
+        update.setOddsAway(new java.math.BigDecimal("2.15"));
+
+        mockMvc.perform(put("/api/games/{id}/odds", saved.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(update)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.oddsHome").value(1.70))
+            .andExpect(jsonPath("$.oddsAway").value(2.15));
+    }
+
+    @Test
+    void testDeleteGameById() throws Exception {
+        Game saved = gameRepository.save(newGame("Gotham Bats", "Metropolis Men"));
+
+        mockMvc.perform(delete("/api/games/{id}", saved.getId()))
+            .andExpect(status().isOk());
+
+        // verify gone (controller returns null -> empty response)
+        mockMvc.perform(get("/api/games/{id}", saved.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().string(""));
+    }
+
+    @Test
+    void testBulkCreateAndBulkDeleteByStatus() throws Exception {
+        // bulk create via controller
+        java.util.List<Game> payload = java.util.Arrays.asList(
+            newGame("Oakland Raid-ers", "San Diego Super-Chargers"),
+            newGame("Cleveland Brownies", "Pittsburgh Stillers")
+        );
+
+        mockMvc.perform(post("/api/games/bulk")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(payload)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$.length()").value(2));
+
+        // bulk delete by status=scheduled (both are scheduled)
+        mockMvc.perform(delete("/api/games").param("status", "scheduled"))
+            .andExpect(status().isOk())
+            .andExpect(content().string(org.hamcrest.Matchers.anyOf(
+                org.hamcrest.Matchers.equalTo("2"),
+                org.hamcrest.Matchers.equalTo("2L")
+            )));
+    }
+
+ // end of Games tests
 
 
 
@@ -195,5 +333,4 @@ class ControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(""));
     }
->>>>>>> main
 }
