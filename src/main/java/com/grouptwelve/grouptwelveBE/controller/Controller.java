@@ -52,6 +52,11 @@ public class Controller {
         return userRepository.findAll();
     }
 
+    @GetMapping("/users/email/{email}") // GET 3
+    public User getUsersByEmail(@PathVariable String email) {
+        return userRepository.findByEmail(email);
+    }
+
     @GetMapping("/users/{id}") // GET 2
     public User getUserById(@PathVariable("id") Long id) {
         return userRepository.findById(id).orElse(null);
