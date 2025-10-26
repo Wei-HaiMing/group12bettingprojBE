@@ -22,6 +22,8 @@ import com.grouptwelve.grouptwelveBE.repository.FavoriteTeamRepository;
 import com.grouptwelve.grouptwelveBE.repository.GameRepository;
 import com.grouptwelve.grouptwelveBE.repository.PlayerRepository;
 import com.grouptwelve.grouptwelveBE.repository.UserRepository;
+import com.grouptwelve.grouptwelveBE.model.FootballTeam;
+import com.grouptwelve.grouptwelveBE.repository.FootballTeamRepository;
 
 
 // keep all controllers in this file for simplicity
@@ -40,6 +42,9 @@ public class Controller {
 
     @Autowired
     private PlayerRepository playerRepository;
+  
+    @Autowired
+    private FootballTeamRepository footballTeamRepository;
 
 
     @GetMapping("/")
@@ -291,4 +296,68 @@ public class Controller {
     }
     // FavoriteTeam CRUD operations END
 
+    // FOOTBALL TEAMS ROUTES BEGIN
+@GetMapping("/football-teams")
+public List<FootballTeam> getAllFootballTeams(
+        @RequestParam(required = false) String q,
+        @RequestParam(required = false) String home,
+        @RequestParam(required = false) String away) {
+
+    if (q != null && !q.isBlank()) {
+        return footballTeamRepository.search(q);
+    } else if (home != null && !home.isBlank()) {
+        return footballTeamRepository.findByHomeTeamIgnoreCase(home);
+    } else if (away != null && !away.isBlank()) {
+        return footballTeamRepository.findByAwayTeamIgnoreCase(away);
+    } else {
+        return footballTeamRepository.findAll();
+    }
+}
+
+@GetMapping("/football-teams/{home}/{away}")
+public FootballTeam getFootballTeamByHomeAndAway(@PathVariable String home, @PathVariable String away) {
+    return footballTeamRepository
+            .findByHomeTeamIgnoreCaseAndAwayTeamIgnoreCase(home, away)
+            .orElse(null);
+}
+
+@PostMapping("/football-teams")
+public FootballTeam createFootballTeam(@RequestBody FootballTeam team) {
+    return footballTeamRepository.save(team);
+}
+
+@PutMapping("/football-teams/{home}/{away}")
+public FootballTeam updateFootballTeam(
+        @PathVariable String home,
+        @PathVariable String away,
+        @RequestBody FootballTeam updated) {
+
+    return footballTeamRepository
+            .findByHomeTeamIgnoreCaseAndAwayTeamIgnoreCase(home, away)
+            .map(existing -> {
+                if (updated.getHomeTeam() != null) existing.setHomeTeam(updated.getHomeTeam());
+                if (updated.getAwayTeam() != null) existing.setAwayTeam(updated.getAwayTeam());
+                // if (updated.getScore() != null) existing.setScore(updated.getScore());
+                // if (updated.getTouchdowns() != null) existing.setTouchdowns(updated.getTouchdowns());
+                // if (updated.getFieldGoals() != null) existing.setFieldGoals(updated.getFieldGoals());
+                return footballTeamRepository.save(existing);
+            })
+            .orElse(null);
+}
+
+@DeleteMapping("/football-teams/{home}/{away}")
+public String deleteFootballTeam(@PathVariable String home, @PathVariable String away) {
+    return footballTeamRepository
+            .findByHomeTeamIgnoreCaseAndAwayTeamIgnoreCase(home, away)
+            .map(team -> {
+                footballTeamRepository.delete(team);
+                return "Deleted matchup: " + home + " vs " + away;
+            })
+            .orElse("No matchup found for: " + home + " vs " + away);
+}
+
+// FOOTBALL TEAMS ROUTES END
+
+
+    
 }
