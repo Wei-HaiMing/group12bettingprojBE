@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface FootballTeamRepository extends JpaRepository<FootballTeam, Long> {
 
-    // ---- Derived queries matching your entity fields ----
+    
     List<FootballTeam> findByHomeTeamIgnoreCase(String homeTeam);
     List<FootballTeam> findByAwayTeamIgnoreCase(String awayTeam);
     Optional<FootballTeam> findByHomeTeamIgnoreCaseAndAwayTeamIgnoreCase(String homeTeam, String awayTeam);
