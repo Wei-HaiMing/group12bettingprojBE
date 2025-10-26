@@ -53,7 +53,7 @@ public class Controller {
     }
 
     @GetMapping("/users/email/{email}") // GET 3
-    public User getUsersByEmail(@PathVariable String email) {
+    public User getUsersByEmail(@PathVariable("email") String email) {
         return userRepository.findByEmail(email);
     }
 
