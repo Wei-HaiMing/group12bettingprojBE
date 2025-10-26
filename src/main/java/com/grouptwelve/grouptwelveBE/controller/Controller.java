@@ -117,7 +117,47 @@ public class Controller {
     }
 
     // GET (2): one by id
-    
+        @GetMapping("/games/{id}")
+    public Game getGame(@PathVariable("id") Long id) {
+        return gameRepository.findById(id).orElse(null);
+    }
+
+    // PUT (1): update core fields (like the game info - status or teams)
+    @PutMapping("/games/{id}")
+    public Game updateGame(@PathVariable("id") Long id, @RequestBody Game u) {
+        return gameRepository.findById(id).map(g -> {
+            if (u.getLeague() != null) g.setLeague(u.getLeague());
+            if (u.getHomeTeam() != null) g.setHomeTeam(u.getHomeTeam());
+            if (u.getAwayTeam() != null) g.setAwayTeam(u.getAwayTeam());
+            if (u.getStartTime() != null) g.setStartTime(u.getStartTime());
+            if (u.getStatus() != null) g.setStatus(u.getStatus());
+            if (u.getOddsHome() != null) g.setOddsHome(u.getOddsHome());
+            if (u.getOddsAway() != null) g.setOddsAway(u.getOddsAway());
+            return gameRepository.save(g);
+        }).orElse(null);
+    }
+
+    // PUT (2): update odds only
+    @PutMapping("/games/{id}/odds")
+    public Game updateOdds(@PathVariable("id") Long id, @RequestBody Game u) {
+        return gameRepository.findById(id).map(g -> {
+            if (u.getOddsHome() != null) g.setOddsHome(u.getOddsHome());
+            if (u.getOddsAway() != null) g.setOddsAway(u.getOddsAway());
+            return gameRepository.save(g);
+        }).orElse(null);
+    }
+
+    // DELETE (1): delete one
+    @DeleteMapping("/games/{id}")
+    public void deleteGame(@PathVariable("id") Long id) {
+        gameRepository.deleteById(id);
+    }
+
+    // DELETE (2): bulk delete by status
+    @DeleteMapping("/games")
+    public long deleteGamesByStatus(@RequestParam String status) {
+        return gameRepository.deleteByStatus(status);
+    }
     // Player (8 routes)
     // GET /players - lists all players (optional filters: team, position)
     @GetMapping("/players")
@@ -194,6 +234,16 @@ public class Controller {
         } else {
             return "Player with id " + id + " not found.";
         }
+    }
+    
+    @GetMapping("/favoriteteams") // GET 1
+    public List<FavoriteTeam> getAllFavoriteTeams() {
+        return favoriteTeamRepository.findAll();
+    }
+
+    @GetMapping("/favoriteteams/user/{userId}") // GET 2
+    public List<FavoriteTeam> getFavoriteTeamsByUserId(@PathVariable("userId") Long userId) {
+        return favoriteTeamRepository.findByUserId(userId);
     }
     @GetMapping("/favoriteteams/user/{userId}/team/{teamId}") // GET 3
     public FavoriteTeam getFavoriteTeamByUserIdAndTeamId(@PathVariable("userId") Long userId, @PathVariable("teamId") Long teamId) {
