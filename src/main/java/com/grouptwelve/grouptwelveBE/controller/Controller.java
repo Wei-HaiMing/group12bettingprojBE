@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.grouptwelve.grouptwelveBE.model.FavoriteTeam;
 import com.grouptwelve.grouptwelveBE.model.Game;
+import com.grouptwelve.grouptwelveBE.model.Player;
 import com.grouptwelve.grouptwelveBE.model.User;
 import com.grouptwelve.grouptwelveBE.repository.FavoriteTeamRepository;
 import com.grouptwelve.grouptwelveBE.repository.GameRepository;
+import com.grouptwelve.grouptwelveBE.repository.PlayerRepository;
 import com.grouptwelve.grouptwelveBE.repository.UserRepository;
 import com.grouptwelve.grouptwelveBE.model.FootballTeam;
 import com.grouptwelve.grouptwelveBE.repository.FootballTeamRepository;
@@ -31,12 +33,16 @@ import com.grouptwelve.grouptwelveBE.repository.FootballTeamRepository;
 public class Controller {
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private FavoriteTeamRepository favoriteTeamRepository;
 
     @Autowired
     private GameRepository gameRepository;
 
+    @Autowired
+    private PlayerRepository playerRepository;
+  
     @Autowired
     private FootballTeamRepository footballTeamRepository;
 
@@ -116,7 +122,7 @@ public class Controller {
     }
 
     // GET (2): one by id
-    @GetMapping("/games/{id}")
+        @GetMapping("/games/{id}")
     public Game getGame(@PathVariable("id") Long id) {
         return gameRepository.findById(id).orElse(null);
     }
@@ -157,33 +163,84 @@ public class Controller {
     public long deleteGamesByStatus(@RequestParam String status) {
         return gameRepository.deleteByStatus(status);
     }
+    // Player (8 routes)
+    // GET /players - lists all players (optional filters: team, position)
+    @GetMapping("/players")
+    public List<Player> listPlayers(@RequestParam(required = false) String team,
+                                    @RequestParam(required = false) String position) {
+        boolean noTeam = (team == null || team.isBlank());
+        boolean noPos = (position == null || position.isBlank());
+        if (noTeam && noPos) return playerRepository.findAll();
+        if (!noTeam && noPos) return playerRepository.findByTeam(team);
+        if (noTeam && !noPos) return playerRepository.findByPosition(position);
+        // both provided: filter team result by position
+        List<Player> byTeam = playerRepository.findByTeam(team);
+        return byTeam.stream().filter(p -> p.getPosition() != null && position.equalsIgnoreCase(p.getPosition())).toList();
+    }
+
+    // GET /players/{id} - get player by id
+    @GetMapping("/players/{id}")
+    public Player getPlayer(@PathVariable("id") Long id) {
+        return playerRepository.findById(id).orElse(null);
+    }
+
+    // GET /players/position/{position} - list players by position
+    @GetMapping("/players/position/{position}")
+    public List<Player> listPlayersByPosition(@PathVariable("position") String position) {
+        return playerRepository.findByPosition(position);
+    }
+
+    // GET /players/team/{team} - list players by team
+    @GetMapping("/players/team/{team}")
+    public List<Player> listPlayersByTeam(@PathVariable("team") String team) {
+        return playerRepository.findByTeam(team);
+    }
+
+    // GET /players/search?q=... - search by name or team (case-insensitive contains)
+    @GetMapping("/players/search")
+    public List<Player> searchPlayers(@RequestParam("q") String q) {
+        if (q == null || q.isBlank()) return List.of();
+        String qLower = q.toLowerCase();
+        return playerRepository.findAll().stream()
+                .filter(p -> (p.getName() != null && p.getName().toLowerCase().contains(qLower))
+                        || (p.getTeam() != null && p.getTeam().toLowerCase().contains(qLower)))
+                .toList();
+    }
+
+    // POST /players - create new player
+    @PostMapping("/players")
+    public Player createPlayer(@RequestBody Player p) {
+        return playerRepository.save(p);
+    }
+
+    // PUT /players/{id} - update full player record (partial-update semantics)
+    @PutMapping("/players/{id}")
+    public Player updatePlayer(@PathVariable("id") Long id, @RequestBody Player u) {
+        return playerRepository.findById(id).map(existing -> {
+            if (u.getName() != null) existing.setName(u.getName());
+            if (u.getTeam() != null) existing.setTeam(u.getTeam());
+            if (u.getPosition() != null) existing.setPosition(u.getPosition());
+            if (u.getJerseyNumber() != 0) existing.setJerseyNumber(u.getJerseyNumber());
+            if (u.getTouchdowns() != 0) existing.setTouchdowns(u.getTouchdowns());
+            if (u.getTotalYards() != 0) existing.setTotalYards(u.getTotalYards());
+            if (u.getGamesPlayed() != 0) existing.setGamesPlayed(u.getGamesPlayed());
+            if (u.getFieldGoals() != 0) existing.setFieldGoals(u.getFieldGoals());
+            if (u.getCompletionRate() != 0.0) existing.setCompletionRate(u.getCompletionRate());
+            return playerRepository.save(existing);
+        }).orElse(null);
+    }
+
+    // DELETE /players/{id} - delete player by ID
+    @DeleteMapping("/players/{id}")
+    public String deletePlayer(@PathVariable("id") Long id) {
+        if (playerRepository.existsById(id)) {
+            playerRepository.deleteById(id);
+            return "Player with id " + id + " deleted.";
+        } else {
+            return "Player with id " + id + " not found.";
+        }
+    }
     
-
-    // end of games table
-
-
-    @DeleteMapping("/users/{id}") // DELETE 1
-    public String deleteUser(@PathVariable("id") Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return "User with id " + id + " deleted.";
-        } else {
-            return "User with id " + id + " not found.";
-        }
-    }
-
-    @DeleteMapping("/users/email/{email}") // DELETE 2
-    public String deleteUserByEmail(@PathVariable("email") String email) {
-        if (userRepository.existsByEmail(email)) {
-            userRepository.deleteByEmail(email);
-            return "User with email " + email + " deleted.";
-        } else {
-            return "User with email " + email + " not found.";
-        }
-    }
-    // User CRUD operations END
-
-    // FavoriteTeam CRUD operations BEGIN
     @GetMapping("/favoriteteams") // GET 1
     public List<FavoriteTeam> getAllFavoriteTeams() {
         return favoriteTeamRepository.findAll();
@@ -193,7 +250,6 @@ public class Controller {
     public List<FavoriteTeam> getFavoriteTeamsByUserId(@PathVariable("userId") Long userId) {
         return favoriteTeamRepository.findByUserId(userId);
     }
-
     @GetMapping("/favoriteteams/user/{userId}/team/{teamId}") // GET 3
     public FavoriteTeam getFavoriteTeamByUserIdAndTeamId(@PathVariable("userId") Long userId, @PathVariable("teamId") Long teamId) {
         return favoriteTeamRepository.findByUserIdAndTeamId(userId, teamId).orElse(null);
