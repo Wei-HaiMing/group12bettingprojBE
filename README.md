@@ -27,8 +27,8 @@ What was the largest victory?	7
 Final assessment of the project	7
 
 
-##Team Member Retrospectives
-#Armando Vega
+## Team Member Retrospectives
+# Armando Vega
 I tried my best to plan out how to break up stories into issues for each member to complete.
 What was your role / which stories did you work on
 My role was steering the team into figuring out what specifically we need from each feature. In this case, since everything was in the backend, making sure everyone knows how to set up database tables with POJOs and DAOs, explaining what exactly that means, etc.
