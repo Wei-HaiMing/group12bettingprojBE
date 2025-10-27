@@ -4,7 +4,7 @@ October 26th 2025
 Dr. Drew A. Clinkenbeard
 
 
-Project 02 Retrospective
+# Project 02 Retrospective
 Armando Vega, Justin Park, Alexis Guzman, Darius Cuevas
 
 Github Link: 
@@ -47,7 +47,7 @@ If you could do it over, what would you change?
 I'd make sure that we had a clearer road map of what needed to be done each week.
 What is the most valuable thing you learned?
 How the OAuth2 flow works and how to implement it.
-Darius Cuevas
+# Darius Cuevas
 I tried my best on working on the team's database and repository. Making test cases for it and making good routes for it to work.
 What was your role / which stories did you work on
 My role was working on the team database and repository. So that a team's score can be tracked since a lot of gambling relies on who wins the game. I set up the repository to make it easier for the table to be consistently updated. I made test cases for the table to ensure that it actually works.
@@ -68,7 +68,7 @@ Databases are easy on local host but harder to have persistent data.
 
 
 
-Justin Park
+# Justin Park
 I’d say I contributed fairly to the best of my ability on this project. I think I could’ve definitely done more and be a better group mate. I created the stories/issues for both repo’s, made a google doc at the beginning of the project to facilitate brainstorming, deadlines, and timelines. I helped keep the group on pace and understand what needed to be done by certain timelines and weeks. I also assisted with helping get the project started with basic api testing and routes initially. 
 
 
@@ -94,7 +94,7 @@ What is the most valuable thing you learned?
 Most valuable thing I learned was making API’s, endpoints, routes, and making my first ever unit test!
 
 
-Alexis Guzman
+# Alexis Guzman
 I implemented testing along with GitHub Actions. I also worked on tables with their respective repositories and routes.
 What was your role / which stories did you work on
 My role was setting up testing and github actions for every push/pull request. I worked on issues such as test setup(as mentioned), player table, repo, routes.
@@ -113,7 +113,7 @@ If I could do it over again, I would’ve setup the test suite before anything e
 What is the most valuable thing you learned?
 The most valuable thing I learned about this project is that building from scratch is way easier and less annoying than trying to adapt to an already built project.
 
-Conclusions
+## Conclusions
 How successful was the project?
 I would say that the project was about 90% successful. We worked on all of the aspects of the backend that the frontend would utilize, but did not implement the features fully through the frontend through the UI. But we were able to understand the flow of how the database is set up and how things are hosted on a server.
 What was the largest victory?
