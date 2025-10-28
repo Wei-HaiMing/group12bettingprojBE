@@ -218,6 +218,38 @@ public class Controller {
         return playerRepository.save(p);
     }
 
+    // POST /dev/players/seed - dev helper: seed database with example players if empty
+    @PostMapping("/dev/players/seed")
+    public List<Player> seedPlayers() {
+        if (playerRepository.count() > 0) {
+            return playerRepository.findAll();
+        }
+        List<Player> seeds = List.of(
+                new Player("Tom Example", "Patriots", "QB", 12),
+                new Player("Eli Demo", "Giants", "WR", 81),
+                new Player("Sam Sample", "Patriots", "WR", 88),
+                new Player("Joe Tester", "Rams", "RB", 22)
+        );
+        return playerRepository.saveAll(seeds);
+    }
+
+    // GET /dev/players/seed - alternate dev helper (works if POST is blocked by security)
+    @GetMapping("/dev/players/seed")
+    public List<Player> seedPlayersGet() {
+        return seedPlayers();
+    }
+
+    // GET /dev-seed-players and POST /dev-seed-players - safe top-level dev helpers
+    @GetMapping("/dev-seed-players")
+    public List<Player> seedPlayersTopGet() {
+        return seedPlayers();
+    }
+
+    @PostMapping("/dev-seed-players")
+    public List<Player> seedPlayersTopPost() {
+        return seedPlayers();
+    }
+
     // PUT /players/{id} - update full player record (partial-update semantics)
     @PutMapping("/players/{id}")
     public Player updatePlayer(@PathVariable("id") Long id, @RequestBody Player u) {
